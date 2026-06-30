@@ -225,9 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showImage();
     };
 
-    triggers.forEach((trigger, idx) => {
-        trigger.addEventListener('click', (e) => {
-            e.stopPropagation();
+    portfolioItems.forEach((item, idx) => {
+        item.addEventListener('click', (e) => {
             openLightbox(idx);
         });
     });
@@ -369,7 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `Message / Project Dimensions:\n${submission.message || 'No additional details provided.'}`
             );
             
-            const mailtoUrl = `mailto:nithikmr03@gmail.com?subject=${subject}&body=${body}`;
+            const mailtoUrl = `mailto:canfabscbe@gmail.com?subject=${subject}&body=${body}`;
             
             // Open Success Popup dialog
             successModal.classList.add('active');
