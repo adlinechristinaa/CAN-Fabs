@@ -343,10 +343,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const successModal = document.getElementById('successModal');
     const successCloseBtn = document.querySelector('.success-close-btn');
 
+    // Web3Forms access key — get yours free at https://web3forms.com
+    const WEB3FORMS_ACCESS_KEY = '0977ceef-7b44-4e19-8ecf-8c74a68db61b';
+
     if (quoteForm) {
-        quoteForm.addEventListener('submit', (e) => {
+        const submitBtn = quoteForm.querySelector('button[type="submit"], input[type="submit"]');
+        const originalBtnHTML = submitBtn ? submitBtn.innerHTML : '';
+
+        quoteForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             // Collect Form Values
             const formData = new FormData(quoteForm);
             const submission = {
@@ -356,29 +362,47 @@ document.addEventListener('DOMContentLoaded', () => {
                 service: formData.get('service'),
                 message: formData.get('message')
             };
-            
-            // Trigger mailto client-side dispatch to direct email recipient
-            const subject = encodeURIComponent(`Can Fabs Quote Request from ${submission.name}`);
-            const body = encodeURIComponent(
-                `Can Fabs Quote Request Details:\n\n` +
-                `Name: ${submission.name}\n` +
-                `Phone: ${submission.phone}\n` +
-                `Email: ${submission.email || 'Not Provided'}\n` +
-                `Requested Service: ${submission.service}\n\n` +
-                `Message / Project Dimensions:\n${submission.message || 'No additional details provided.'}`
-            );
-            
-            const mailtoUrl = `mailto:canfabscbe@gmail.com?subject=${subject}&body=${body}`;
-            
-            // Open Success Popup dialog
-            successModal.classList.add('active');
-            successModal.setAttribute('aria-hidden', 'false');
-            
-            // Reset fields
-            quoteForm.reset();
 
-            // Redirect user to open default email client with details pre-filled
-            window.location.href = mailtoUrl;
+            // Build the payload Web3Forms expects
+            const payload = new FormData();
+            payload.append('access_key', WEB3FORMS_ACCESS_KEY);
+            payload.append('subject', `Can Fabs Quote Request from ${submission.name}`);
+            payload.append('name', submission.name);
+            payload.append('phone', submission.phone);
+            payload.append('email', submission.email || 'Not provided');
+            payload.append('service_requested', submission.service);
+            payload.append('message', submission.message || 'No additional details provided.');
+
+            // Disable button + show sending state
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Sending...';
+            }
+
+            try {
+                const response = await fetch('https://api.web3forms.com/submit', {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json' },
+                    body: payload
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    // Open Success Popup dialog
+                    successModal.classList.add('active');
+                    successModal.setAttribute('aria-hidden', 'false');
+                    quoteForm.reset();
+                } else {
+                    alert('Something went wrong sending your request. Please call or WhatsApp us directly instead.');
+                }
+            } catch (error) {
+                alert('Could not send your request — please check your internet connection and try again, or contact us directly.');
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnHTML;
+                }
+            }
         });
     }
 
